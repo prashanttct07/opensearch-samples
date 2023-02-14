@@ -57,6 +57,7 @@ class OpenSearchStack(Stack):
                                          )
 
         # Setup Resource Policy
+        # Change under resources and make it as an array, if you want to specifically add ARN for specific log group
         cfn_resource_policy = logs.CfnResourcePolicy(self, "MyCfnResourcePolicy",
                                                      policy_document="{ \"Version\": \"2012-10-17\", \"Statement\": [ {\"Effect\": \"Allow\", \"Principal\": { \"Service\": [ \"es.amazonaws.com\" ] }, \"Action\":[\"logs:PutLogEvents\", \"logs:CreateLogStream\"], \"Resource\": [\"arn:aws:logs:*:*\"] } ] }",
                                                      policy_name="opensearch-stack-demo-policy"
