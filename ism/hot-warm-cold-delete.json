@@ -1,0 +1,80 @@
+{
+  "policy": {
+    "description": "Demo Hot-UltraWarm-Cold-Delete",
+    "schema_version": 1,
+    "default_state": "hot_state_demo",
+    "states": [
+      {
+        "name": "hot_state_demo",
+        "actions": [],
+        "transitions": [
+          {
+            "state_name": "warm_state_demo",
+            "conditions": {
+              "min_index_age": "7d"
+            }
+          }
+        ]
+      },
+      {
+        "name": "warm_state_demo",
+        "actions": [
+          {
+            "timeout": "24h",
+            "retry": {
+              "count": 5,
+              "backoff": "exponential",
+              "delay": "1h"
+            },
+            "warm_migration": {}
+          }
+        ],
+        "transitions": [
+          {
+            "state_name": "cold_state_demo",
+            "conditions": {
+              "min_index_age": "358d"
+            }
+          }
+        ]
+      },
+      {
+        "name": "cold_state_demo",
+        "actions": [
+          {
+            "cold_migration": {
+              "start_time": null,
+              "end_time": null,
+              "timestamp_field": "@timestamp",
+              "ignore": "none"
+            }
+          }
+        ],
+        "transitions": [
+          {
+            "state_name": "delete_state_demo",
+            "conditions": {
+              "min_index_age": "2555d"
+            }
+          }
+        ]
+      },
+      {
+        "name": "delete_state_demo",
+        "actions": [
+          {
+            "cold_delete": {}
+          }
+        ],
+        "transitions": []
+      }
+    ],
+    "ism_template": [
+      {
+        "index_patterns": [
+          "octank-iot-logs-*"
+        ]
+      }
+    ]
+  }
+}
