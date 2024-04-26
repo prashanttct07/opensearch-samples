@@ -1,0 +1,102 @@
+
+GET _cat/indices/*sneak*?v
+
+GET vector_sneakers/_search
+GET neural_sneakers/_search
+GET sparse_sneakers/_search
+
+GET vector_sneakers
+GET neural_sneakers
+GET sparse_sneakers
+
+# Dense Neural
+GET _plugins/_ml/models/ccEVHI8Bnm8K0aj73Ctb	
+
+PUT _ingest/pipeline/neural-pipeline-dense
+{
+  "description": "Semantic Search for retail product catalog ",
+  "processors": [
+    {
+      "text_embedding": {
+        "model_id": "ccEVHI8Bnm8K0aj73Ctb",
+        "field_map": {
+          "product_description": "v_product_description",
+          "question_text": "v_question_text"
+        }
+      }
+    }
+  ]
+}
+
+POST neural_sneakers/_doc
+{
+  "product_description" : "Nike Running Shoes and athletes"
+}
+
+
+GET /neural_sneakers/_search
+{
+  "_source": {
+    "excludes": [
+      "v_product_description",
+      "v_question_text"
+    ]
+  },
+  "query": {
+    "neural": {
+      "v_product_description": {
+        "query_text": "red sneakers",
+        "model_id": "ccEVHI8Bnm8K0aj73Ctb",
+        "k": 5
+      }
+    }
+  }
+}
+
+
+
+#######################
+# Sparse Neural
+GET _plugins/_ml/models/UEoWHI8BHYos7QoKyGZb
+
+PUT /_ingest/pipeline/neural-pipeline-sparse
+{
+  "description": "An sparse encoding ingest pipeline",
+  "processors": [
+    {
+      "sparse_encoding": {
+        "model_id": "UEoWHI8BHYos7QoKyGZb",
+        "field_map": {
+          "product_description": "v_product_description",
+          "question_text": "v_question_text"
+        }
+      }
+    }
+  ]
+}
+
+
+POST sparse_sneakers/_doc
+{
+  "product_description" : "Nike Running Shoes and athletes"
+}
+
+GET /sparse_sneakers/_search
+{
+  "_source": {
+    "excludes": [
+      "v_product_description",
+      "v_question_text"
+    ]
+  },
+  "query": {
+    "neural_sparse": {
+      "v_product_description": {
+        "query_text": "Shoes for party",
+        "model_id": "UEoWHI8BHYos7QoKyGZb",
+        "max_token_score": 2
+      }
+    }
+  }
+}
+
