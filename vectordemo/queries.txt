@@ -1,13 +1,69 @@
+PUT _cluster/settings
+{
+   "persistent":{
+     "plugins.ml_commons.only_run_on_ml_node": false
+   }
+}
 
-GET _cat/indices/*sneak*?v
+GET _cluster/settings
 
-GET vector_sneakers/_search
-GET neural_sneakers/_search
-GET sparse_sneakers/_search
+POST /_plugins/_ml/models/_upload
+{
+  "name": "huggingface/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "version": "1.0.1",
+  "model_format": "TORCH_SCRIPT"
+}
+#s8M1Ho8Bnm8K0aj7T0hN
+
+GET /_plugins/_ml/tasks/s8M1Ho8Bnm8K0aj7T0hN
+#tMM1Ho8Bnm8K0aj7UUgn
+
+POST /_plugins/_ml/models/tMM1Ho8Bnm8K0aj7UUgn/_load
+#tcM3Ho8Bnm8K0aj7JUjU
+
+PUT _ingest/pipeline/neural-pipeline-local
+{
+  "description": "Semantic Search for retail product catalog ",
+  "processors": [
+    {
+      "text_embedding": {
+        "model_id": "tMM1Ho8Bnm8K0aj7UUgn",
+        "field_map": {
+          "product_description": "v_product_description",
+          "question_text": "v_question_text"
+        }
+      }
+    }
+  ]
+}
+
+GET /neural_sneakers_local/_search
+{
+  "_source": {
+    "excludes": [
+      "v_product_description",
+      "v_question_text"
+    ]
+  },
+  "query": {
+    "neural": {
+      "v_product_description": {
+        "query_text": "red sneakers",
+        "model_id": "tMM1Ho8Bnm8K0aj7UUgn",
+        "k": 5
+      }
+    }
+  }
+}
+
+#####
+
+GET _cat/indices?v
 
 GET vector_sneakers
 GET neural_sneakers
 GET sparse_sneakers
+GET neural_sneakers_local
 
 # Dense Neural
 GET _plugins/_ml/models/ccEVHI8Bnm8K0aj73Ctb	
@@ -99,4 +155,12 @@ GET /sparse_sneakers/_search
     }
   }
 }
+
+
+
+
+########
+https://aws.amazon.com/blogs/big-data/power-neural-search-with-ai-ml-connectors-in-amazon-opensearch-service/
+
+https://opensearch.org/docs/2.11/search-plugins/neural-search-tutorial/
 
