@@ -1,0 +1,131 @@
+## Create Index Template sample-logs
+PUT _index_template/sample-logs
+{
+  "index_patterns": [
+    "sample-logs-*"
+  ],
+  "template": {
+    "settings": {
+      "number_of_shards": 10,
+      "number_of_replicas": 1,
+      "index.plugins.index_state_management.rollover_alias": "sample-logs"
+    },
+    "mappings": {
+      "dynamic_templates": [
+        {
+          "default_strings_as_keyword": {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "keyword"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "@timestamp": {
+          "type": "date"
+        },
+        "time": {
+          "type": "date"
+        }
+      }
+    }
+  }
+}
+
+## Create ISM POlicies sample-logs
+PUT _plugins/_ism/policies/sample-logs
+{
+  "policy": {
+    "description": "sample-logs",
+    "default_state": "hot",
+    "states": [
+      {
+        "name": "hot",
+        "actions": [
+          {
+            "retry": {
+              "count": 5,
+              "backoff": "exponential",
+              "delay": "1h"
+            },
+            "rollover": {
+              "min_primary_shard_size": "50gb",
+              "min_index_age": "8h"
+            }
+          }
+        ],
+        "transitions": [
+          {
+            "state_name": "warm",
+            "conditions": {
+              "min_index_age": "7d"
+            }
+          }
+        ]
+      },
+      {
+        "name": "warm",
+        "actions": [
+          {
+            "retry": {
+              "count": 3,
+              "backoff": "exponential",
+              "delay": "1m"
+            },
+            "force_merge": {
+              "max_num_segments": 5
+            }
+          },
+          {
+            "retry": {
+              "count": 5,
+              "backoff": "exponential",
+              "delay": "1h"
+            },
+            "warm_migration": {}
+          }
+        ],
+        "transitions": [
+          {
+            "state_name": "delete",
+            "conditions": {
+              "min_index_age": "28d"
+            }
+          }
+        ]
+      },
+      {
+        "name": "delete",
+        "actions": [
+          {
+            "retry": {
+              "count": 3,
+              "backoff": "exponential",
+              "delay": "1h"
+            },
+            "delete": {}
+          }
+        ],
+        "transitions": []
+      }
+    ],
+    "ism_template": [
+      {
+        "index_patterns": [
+          sample-logs-*"
+        ]
+      }
+    ]
+  }
+}
+
+## Bootstrap Index sample-logs
+PUT sample-logs-000001
+{
+  "aliases": {
+    "sample-logs": {
+      "is_write_index": true
+    }
+  }
+}
