@@ -113,7 +113,7 @@ PUT _plugins/_ism/policies/sample-logs
     "ism_template": [
       {
         "index_patterns": [
-          sample-logs-*"
+          "sample-logs-*"
         ]
       }
     ]
