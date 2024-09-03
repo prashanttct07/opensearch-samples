@@ -1,5 +1,5 @@
 ## Create Index Template sample-logs
-PUT _index_template/sample-logs
+PUT _template/sample-logs
 {
   "index_patterns": [
     "sample-logs-*"
