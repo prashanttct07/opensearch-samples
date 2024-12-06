@@ -5,6 +5,7 @@ PUT _cluster/settings
    }
 }
 
+
 GET _cluster/settings
 
 POST /_plugins/_ml/models/_upload
@@ -13,13 +14,14 @@ POST /_plugins/_ml/models/_upload
   "version": "1.0.1",
   "model_format": "TORCH_SCRIPT"
 }
-#s8M1Ho8Bnm8K0aj7T0hN
+# task: pv2mnZMB51SOe2qsVUw1
 
-GET /_plugins/_ml/tasks/s8M1Ho8Bnm8K0aj7T0hN
-#tMM1Ho8Bnm8K0aj7UUgn
 
-POST /_plugins/_ml/models/tMM1Ho8Bnm8K0aj7UUgn/_load
-#tcM3Ho8Bnm8K0aj7JUjU
+
+GET /_plugins/_ml/tasks/pv2mnZMB51SOe2qsVUw1
+# Model: GdamnZMBA7u4hoSwVQqV
+
+POST /_plugins/_ml/models/GdamnZMBA7u4hoSwVQqV/_load
 
 PUT _ingest/pipeline/neural-pipeline-local
 {
@@ -27,7 +29,7 @@ PUT _ingest/pipeline/neural-pipeline-local
   "processors": [
     {
       "text_embedding": {
-        "model_id": "tMM1Ho8Bnm8K0aj7UUgn",
+        "model_id": "GdamnZMBA7u4hoSwVQqV",
         "field_map": {
           "product_description": "v_product_description",
           "question_text": "v_question_text"
@@ -37,7 +39,45 @@ PUT _ingest/pipeline/neural-pipeline-local
   ]
 }
 
-GET /neural_sneakers_local/_search
+PUT demo-neural
+{
+  "settings": {
+    "index.knn": "true",
+    "default_pipeline": "neural-pipeline-local"
+  },
+  "mappings": {
+    "properties": {
+      "v_product_description": {
+        "type": "knn_vector",
+        "dimension": 384,
+        "method": {
+          "name": "hnsw",
+          "engine": "faiss",
+          "space_type": "l2"
+        }
+      },
+      "v_question_text": {
+        "type": "knn_vector",
+        "dimension": 384,
+        "method": {
+          "name": "hnsw",
+          "engine": "faiss",
+          "space_type": "l2"
+        }
+      }
+    }
+  }
+}
+
+
+POST demo-neural/_doc
+{
+  "product_description" : "Nike Running Shoes and athletes",
+  "size" : 1
+}
+        
+        
+GET demo-neural/_search
 {
   "_source": {
     "excludes": [
@@ -49,12 +89,47 @@ GET /neural_sneakers_local/_search
     "neural": {
       "v_product_description": {
         "query_text": "red sneakers",
-        "model_id": "tMM1Ho8Bnm8K0aj7UUgn",
+        "model_id": "GdamnZMBA7u4hoSwVQqV",
         "k": 5
       }
     }
   }
 }
+
+GET demo-neural/_search
+{
+  "_source": {
+    "excludes": [
+      "v_product_description",
+      "v_question_text"
+    ]
+  },
+  "query": {
+    "neural": {
+      "v_product_description": {
+        "query_text": "red sneakers",
+        "model_id": "GdamnZMBA7u4hoSwVQqV",
+        "k": 5,
+        "filter": {
+          "bool": {
+            "must": [
+              {
+                "range": {
+                  "size": {
+                    "gte": 1,
+                    "lte": 5
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+
+
 
 #####
 
