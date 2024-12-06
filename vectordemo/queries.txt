@@ -130,6 +130,52 @@ GET demo-neural/_search
 }
 
 
+GET demo-neural/_search
+{
+  "_source": {
+    "excludes": [
+      "v_product_description",
+      "v_question_text"
+    ]
+  },
+  "query": {
+    "hybrid": {
+      "queries": [
+        {
+          "match": {
+            "product_description": {
+              "query": "Adidas"
+            }
+          }
+        },
+        {
+          "neural": {
+            "v_product_description": {
+              "query_text": "red sneakers",
+              "model_id": "GdamnZMBA7u4hoSwVQqV",
+              "k": 5,
+              "filter": {
+                "bool": {
+                  "must": [
+                    {
+                      "range": {
+                        "size": {
+                          "gte": 1,
+                          "lte": 5
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
 
 #####
 
